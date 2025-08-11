@@ -1,0 +1,21 @@
+{
+  "description": "A WhatsApp bot with rich and multiple functions",
+  "main": "./index.js",
+  "engines": {
+    "npm": ">=9.7.2",
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node pair.js"
+  },
+  "dependencies": {
+    "baileys": "^6.7.18",
+    "qrcode": "^1.5.3",
+    "awesome-phonenumber": "^2.64.0",
+    "pino": "^8.17.0",
+    "phone": "^3.1.32",
+    "body-parser": "^1.20.2",
+    "express": "^5.0.0",
+    "path": "^0.12.7"
+  }
+}

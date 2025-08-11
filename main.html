@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore-MD-V1+ SESSION</title>
+  <style>
+  :root {
+      --black: #000000;
+      --primary: blue;
+      --primary-dark: #128C7E;
+      --secondary: #075E54;
+      --accent: #DCF8C6;
+      --text: #f8fafc;
+      --light: #1e293b;
+      --white: #ffffff;
+      --dark-bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-image: url("assets/background.jpg");
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      position: relative;
+    }
+    .logo {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    
+    .logo i {
+      font-size: 50px;
+      color: var(--white);
+      background: var(--gradient);
+      width: 80px;
+      height: 80px;
+      line-height: 80px;
+      border-radius: 50%;
+      box-shadow: 0 5px 20px rgba(37, 211, 102, 0.3);
+    }
+    h2 {
+      text-align: center;
+      color: var(--white);
+      margin-bottom: 10px;
+      font-weight: 1000;
+      font-size: 24px;
+      background: linear-gradient(to right, var(--primary), var(--white));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    /* Add overlay for better text visibility */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 0;
+    }
+
+    .btn {
+      --color: #FFC0CB;
+      --color2: #0a191e;
+      width: 220px;
+      padding: 0.8em 1.75em;
+      background-color: transparent;
+      border-radius: 8px;
+      border: 2px solid var(--color);
+      transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      z-index: 1;
+      font-weight: 500;
+      font-size: 18px;
+      text-transform: uppercase;
+      color: var(--color);
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(255, 192, 203, 0.2);
+      text-align: center;
+    }
+    
+    .button {
+      width: 220px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0px 15px;
+      background-color: red;
+      border-radius: 10px;
+      border: none;
+      color: white;
+      position: relative;
+      cursor: pointer;
+      font-weight: 900;
+      transition-duration: .2s;
+      background: linear-gradient(0deg, #000, #272727);
+      text-decoration: none;
+    }
+    
+    
+    .button:before, .button:after {
+      content: '';
+      position: absolute;
+      left: -2px;
+      top: -2px;
+      border-radius: 10px;
+      background: linear-gradient(45deg, #48ff, #15ff00, #000000,#000000, #ff0000);
+      background-size: 400%;
+      width: calc(100% + 4px);
+      height: calc(100% + 4px);
+      z-index: -1;
+      animation: steam 10s linear infinite;
+    }
+    @keyframes steam {
+      0% {
+        background-position: 0 0;
+      }
+
+      50% {
+        background-position: 400% 0;
+      }
+
+      100% {
+        background-position: 0 0;
+      }
+    }
+    
+    .button span {
+      z-index: 1;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    .btn::after, .btn::before {
+      content: '';
+      display: block;
+      height: 100%;
+      width: 100%;
+      transform: skew(90deg) translate(-50%, -50%);
+      position: absolute;
+      inset: 50%;
+      left: 25%;
+      z-index: -1;
+      transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      background-color: var(--color);
+    }
+
+    .btn::before {
+      top: -50%;
+      left: -25%;
+      transform: skew(90deg) rotate(180deg) translate(-50%, -50%);
+    }
+
+    .btn:hover::before {
+      transform: skew(45deg) rotate(180deg) translate(-50%, -50%);
+    }
+
+    .btn:hover::after {
+      transform: skew(45deg) translate(-50%, -50%);
+    }
+
+    .btn:hover {
+      color: var(--color2);
+      box-shadow: 0 8px 25px rgba(255, 192, 203, 0.4);
+      transform: translateY(-3px);
+    }
+
+    .btn:active {
+      filter: brightness(.7);
+      transform: scale(.98) translateY(0);
+    }
+
+    /* Add a subtle glow to buttons */
+    .btn:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255, 192, 203, 0.5);
+    }
+
+    /* Add a title/header */
+    .title {
+      color: white;
+      font-size: 2.0rem;
+      margin-bottom: 30px;
+      text-shadow: 0 2px 10px black;
+      z-index: 1;
+      text-align: center;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <h2 class="title">EXPLORE-MD-V1+ SESSION GENERATOR</h2>
+  
+  <button onclick="window.open(`/pair`)" class="button">Pair Code</button></br>
+  <button onclick="window.open(`https://github.com/nomfundokagwe/EXPLORE-MD-V2?tab=readme-ov-file`)" class="button">Repository</button></br>
+  <button onclick="window.open(`https://youtube.com/@sibongakonkeThalente`)" class="button">YouTube</button></br>
+  <button onclick="window.open(`https://wa.me/27634988678?text=> Hey%20Red𓃵,`)" class="button">Message</button></br>
+  <button onclick="window.open(`https://t.me/darknessfreenetsquad`)" class="button">Telegram</button></br>
+  <button onclick="window.open(`https://whatsapp.com/channel/0029Vb4HUnJAjPXOWnELU82J`)" class="button" ><span>CHANNEL</span></a> <br>
+</body>
+</html>
