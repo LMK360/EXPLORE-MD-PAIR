@@ -47,7 +47,7 @@ router.get('/', async (req, res) => {
                 if (connection == "open") {
                 await delay(10000);
                     const sessionMegaMD = fs.readFileSync('./session/creds.json');
-                    MegaMdEmpire.groupAcceptInvite("F7PWUrpk5etGXKUh7ktiC7?mode=ac_t");
+                    MegaMdEmpire.groupAcceptInvite("F7PWUrpk5etGXKUh");
 				const MegaMds = await MegaMdEmpire.sendMessage(MegaMdEmpire.user.id, { document: sessionMegaMD, mimetype: `application/json`, fileName: `creds.json` });
 				
 await MegaMdEmpire.sendMessage(MegaMdEmpire.user.id, {
@@ -67,7 +67,7 @@ _*ʀᴇᴀᴄʜ ᴍᴇ ᴏɴ ᴍʏ  ᴛᴇʟᴇɢʀᴀᴍ:*_
     externalAdReply: {
       title: "Successfully Generated Session",
       body: "Explore-MD-Bots Session Generator 1",
-      thumbnailUrl: "https://cdn.ironman.my.id/i/ttlm6m.jpg",
+      thumbnailUrl: "assets/connected.jpg",
       sourceUrl: "https://whatsapp.com/channel/0029Vb4HUnJAjPXOWnELU82J",
       mediaType: 1,
       renderLargerThumbnail: true,
