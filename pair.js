@@ -1,110 +1,228 @@
 const express = require('express');
 const fs = require('fs');
-let router = express.Router()
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
 const pino = require("pino");
+const { Storage } = require('megajs');
+
 const {
-    default: makeWASocket,
-    useMultiFileAuthState,
-    delay,
-    makeCacheableSignalKeyStore
-} = require("baileys");
+  default: makeWASocket,
+  useMultiFileAuthState,
+  delay,
+  makeCacheableSignalKeyStore,
+  DisconnectReason
+} = require("@whiskeysockets/baileys");
 
-function removeFile(FilePath){
-    if(!fs.existsSync(FilePath)) return false;
-    fs.rmSync(FilePath, { recursive: true, force: true })
- };
+const router = express.Router();
+
+// MEGA config from env
+const MEGA_EMAIL = process.env.MEGA_EMAIL;
+const MEGA_PASSWORD = process.env.MEGA_PASSWORD;
+
+// Helper: Remove session folder
+function removeFile(FilePath) {
+  if (!fs.existsSync(FilePath)) return false;
+  fs.rmSync(FilePath, { recursive: true, force: true });
+  return true;
+}
+
+// Helper: Upload to MEGA
+async function uploadToMega(filePath, fileName) {
+  if (!MEGA_EMAIL || !MEGA_PASSWORD) {
+    console.log('MEGA credentials not set, skipping cloud upload');
+    return null;
+  }
+  
+  try {
+    const storage = new Storage({
+      email: MEGA_EMAIL,
+      password: MEGA_PASSWORD
+    });
+    
+    await storage.ready;
+    const fileBuffer = fs.readFileSync(filePath);
+    const file = await storage.upload(fileName, fileBuffer).complete;
+    return file.link;
+  } catch (err) {
+    console.error('MEGA upload failed:', err.message);
+    return null;
+  }
+}
+
+// Main pairing route
 router.get('/', async (req, res) => {
-    let num = req.query.number;
-        async function Mega_MdPair() {
-        const {
-            state,
-            saveCreds
-        } = await useMultiFileAuthState(`./session`)
-     try {
-            let MegaMdEmpire = makeWASocket({
-                auth: {
-                    creds: state.creds,
-                    keys: makeCacheableSignalKeyStore(state.keys, pino({level: "fatal"}).child({level: "fatal"})),
-                },
-                printQRInTerminal: false,
-                logger: pino({level: "fatal"}).child({level: "fatal"}),
-                browser: [ "Ubuntu", "Chrome", "20.0.04" ],
-             });
-             if(!MegaMdEmpire.authState.creds.registered) {
-                await delay(1500);
-                        num = num.replace(/[^0-9]/g,'');
-                            const code = await MegaMdEmpire.requestPairingCode(num)
-                 if(!res.headersSent){
-                 await res.send({code});
-                     }
-                 }
-            MegaMdEmpire.ev.on('creds.update', saveCreds)
-            MegaMdEmpire.ev.on("connection.update", async (s) => {
-                const {
-                    connection,
-                    lastDisconnect
-                } = s;
-                if (connection == "open") {
-                await delay(10000);
-                    const sessionMegaMD = fs.readFileSync('./session/creds.json');
-                    MegaMdEmpire.groupAcceptInvite("F7PWUrpk5etGXKUh");
-				const MegaMds = await MegaMdEmpire.sendMessage(MegaMdEmpire.user.id, { document: sessionMegaMD, mimetype: `application/json`, fileName: `creds.json` });
-				
-await MegaMdEmpire.sendMessage(MegaMdEmpire.user.id, {
-  text: `> *EXPLORE-MD-BOTS sᴇssɪᴏɴ ɪᴅ ᴏʙᴛᴀɪɴᴇᴅ sᴜᴄᴄᴇssғᴜʟʟʏ.*     
-📁ᴜᴘʟᴏᴀᴅ ᴛʜᴇ ᴄʀᴇᴅs.ᴊsᴏɴ ғɪʟᴇ ᴘʀᴏᴠɪᴅᴇᴅ ɪɴ ʏᴏᴜʀ sᴇssɪᴏɴ ғᴏʟᴅᴇʀ. 
+  const num = req.query.number;
+  
+  if (!num) {
+    return res.status(400).json({ 
+      success: false, 
+      error: 'Phone number required. Format: 27634988678' 
+    });
+  }
 
-_*🪀sᴛᴀʏ ᴛᴜɴᴇᴅ ғᴏʟʟᴏᴡ ᴡʜᴀᴛsᴀᴘᴘ ᴄʜᴀɴɴᴇʟ:*_ 
-> _https://whatsapp.com/channel/0029Vb4HUnJAjPXOWnELU82J_
+  // Unique session folder per request
+  const sessionId = uuidv4();
+  const sessionPath = `./sessions/session-${sessionId}`;
 
-_*ʀᴇᴀᴄʜ ᴍᴇ ᴏɴ ᴍʏ  ᴛᴇʟᴇɢʀᴀᴍ:*_  
-> _t.me/darknessfreenetsquad_
+  async function MegaMdPair() {
+    try {
+      // Ensure sessions directory exists
+      if (!fs.existsSync('./sessions')) {
+        fs.mkdirSync('./sessions', { recursive: true });
+      }
 
+      const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 
-> 🫩ʟᴀsᴛʟʏ ᴅᴏ ɴᴏᴛ sʜᴀʀᴇ ʏᴏᴜʀ sᴇssɪᴏɴ ɪᴅ ᴏʀ ᴄʀᴇᴅs.ᴊsᴏɴ ғɪʟᴇ ᴡɪᴛʜ ᴀɴʏᴏɴᴇ ʙʀᴏ ᴀɴᴅ ғᴏʀ ᴀɴʏ ʜᴇʟᴘ _*ᴅᴍ ᴏᴡɴᴇʀ https://wa.me/27634988678*_  `,
+      const MegaMdEmpire = makeWASocket({
+        auth: {
+          creds: state.creds,
+          keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
+        },
+        printQRInTerminal: false,
+        logger: pino({ level: "silent" }),
+        browser: ["Ubuntu", "Chrome", "20.0.04"],
+        connectTimeoutMs: 60000,
+        defaultQueryTimeoutMs: 60000,
+      });
 
-  contextInfo: {
-    externalAdReply: {
-      title: "Successfully Generated Session",
-      body: "Explore-MD-Bots Session Generator 1",
-      thumbnailUrl: "assets/connected.jpg",
-      sourceUrl: "https://whatsapp.com/channel/0029Vb4HUnJAjPXOWnELU82J",
-      mediaType: 1,
-      renderLargerThumbnail: true,
-      showAdAttribution: true
+      // Handle pairing
+      if (!MegaMdEmpire.authState.creds.registered) {
+        await delay(1500);
+        const cleanNum = num.replace(/[^0-9]/g, '');
+        
+        if (cleanNum.length < 10) {
+          removeFile(sessionPath);
+          return res.status(400).json({ 
+            success: false, 
+            error: 'Invalid phone number. Include country code (e.g. 27634988678)' 
+          });
+        }
+
+        const code = await MegaMdEmpire.requestPairingCode(cleanNum);
+        
+        if (!res.headersSent) {
+          return res.json({ 
+            success: true, 
+            code: code,
+            message: 'Enter this code in WhatsApp > Linked Devices > Link with phone number',
+            sessionId: sessionId
+          });
+        }
+      }
+
+      // Connection handler
+      MegaMdEmpire.ev.on('creds.update', saveCreds);
+      
+      MegaMdEmpire.ev.on("connection.update", async (update) => {
+        const { connection, lastDisconnect } = update;
+
+        if (connection === "open") {
+          await delay(5000);
+          
+          try {
+            const credsPath = path.join(sessionPath, 'creds.json');
+            
+            if (!fs.existsSync(credsPath)) {
+              console.error('creds.json not found');
+              return;
+            }
+
+            const sessionMegaMD = fs.readFileSync(credsPath);
+            
+            // Upload to MEGA if configured
+            const megaLink = await uploadToMega(credsPath, `creds-${sessionId}.json`);
+            
+            // Send to user's WhatsApp
+            const MegaMds = await MegaMdEmpire.sendMessage(
+              MegaMdEmpire.user.id, 
+              { 
+                document: sessionMegaMD, 
+                mimetype: 'application/json', 
+                fileName: `creds-${sessionId}.json` 
+              }
+            );
+
+            // Send confirmation message
+            await MegaMdEmpire.sendMessage(
+              MegaMdEmpire.user.id,
+              {
+                text: `> *EXPLORE-MD-BOTS SESSION ID OBTAINED SUCCESSFULLY ✅*\n\n` +
+                      `📁 Upload the creds.json file to your bot's session folder.\n\n` +
+                      `${megaLink ? `☁️ MEGA Backup: ${megaLink}\n\n` : ''}` +
+                      `*🔒 Do NOT share this session file with anyone.*\n\n` +
+                      `> _Powered by REDDRAGON_`,
+                contextInfo: {
+                  externalAdReply: {
+                    title: "Session Generated",
+                    body: "EXPLORE-MD-PAIR",
+                    thumbnailUrl: "https://i.imgur.com/placeholder.jpg",
+                    sourceUrl: "https://github.com/LMK360/EXPLORE-MD-PAIR",
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                  }
+                }
+              },
+              { quoted: MegaMds }
+            );
+
+            // Cleanup
+            await delay(1000);
+            removeFile(sessionPath);
+            
+          } catch (err) {
+            console.error('Session handling error:', err);
+            removeFile(sessionPath);
+          }
+        } 
+        else if (connection === "close") {
+          const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+          
+          if (shouldReconnect) {
+            await delay(10000);
+            MegaMdPair();
+          } else {
+            removeFile(sessionPath);
+          }
+        }
+      });
+
+    } catch (err) {
+      console.error('Pairing error:', err);
+      removeFile(sessionPath);
+      
+      if (!res.headersSent) {
+        return res.status(503).json({ 
+          success: false, 
+          error: 'Service temporarily unavailable. Please try again.' 
+        });
+      }
     }
   }
-}, { quoted: MegaMds });
 
-        await delay(100);
-        removeFile('./session');
-        return;
-            } else if (connection === "close" && lastDisconnect && lastDisconnect.error && lastDisconnect.error.output.statusCode != 401) {
-                    await delay(10000);
-                    Mega_MdPair();
-                }
-            });
-        } catch (err) {
-            console.log("service restated");
-            await removeFile('./session');
-         if(!res.headersSent){
-            await res.send({code:"Service Unavailable"});
-         }
-        }
-    }
-    return await Mega_MdPair()
+  return await MegaMdPair();
 });
 
+// Graceful error handling
 process.on('uncaughtException', function (err) {
-let e = String(err)
-if (e.includes("conflict")) return
-if (e.includes("Socket connection timeout")) return
-if (e.includes("not-authorized")) return
-if (e.includes("rate-overlimit")) return
-if (e.includes("Connection Closed")) return
-if (e.includes("Timed Out")) return
-if (e.includes("Value not found")) return
-console.log('Caught exception: ', err)
-})
+  const e = String(err);
+  const ignoreList = [
+    "conflict",
+    "Socket connection timeout",
+    "not-authorized",
+    "rate-overlimit",
+    "Connection Closed",
+    "Timed Out",
+    "Value not found",
+    "Bad MAC",
+    "stream errored"
+  ];
+  
+  if (ignoreList.some(ignore => e.includes(ignore))) return;
+  console.log('Caught exception: ', err);
+});
 
-module.exports = router
+process.on('unhandledRejection', (reason) => {
+  console.log('Unhandled rejection:', reason);
+});
+
+module.exports = router;
